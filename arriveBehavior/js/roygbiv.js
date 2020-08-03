@@ -1296,7 +1296,7 @@ var NO_MOBILE = false;
 var isPaused = false;
 var defaultFont;
 var fonts = new Object();
-var MAX_TEXT_CHAR_COUNT = 64;
+var MAX_TEXT_CHAR_COUNT = 50;
 var DEFAULT_OFFSET_BETWEEN_CHARS = 20;
 var DEFAULT_OFFSET_BETWEEN_LINES = 20;
 var MARGIN_MODE_2D_TOP_LEFT = 0;
@@ -7068,201 +7068,256 @@ function deploymentScripts(){
   if(deploymentScriptsStatus.SCRIPT_EXECUTION_STATUS_komputeintegration_arriveBehavior_init){if (cpuOperationsHandler.record){cpuOperationsHandler.scriptPerformances.komputeintegration_arriveBehavior_init = performance.now()}// the vector pool
 var vectorPool = ROYGBIV.createVectorPool(10);
 
-// initialize texts
-var githubText = ROYGBIV.getText("githubText");
-ROYGBIV.hideText(ROYGBIV.getText("info2"));
-ROYGBIV.hideText(ROYGBIV.getText("infoText"));
-var infoText = (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()) ? ROYGBIV.getText("info2") : ROYGBIV.getText("infoText");
+var onScene1Entered = function(){
 
-ROYGBIV.showText(infoText);
+  // initialize texts
+  var githubText = ROYGBIV.getText("githubText");
+  ROYGBIV.hideText(ROYGBIV.getText("info2"));
+  ROYGBIV.hideText(ROYGBIV.getText("infoText"));
+  var infoText = (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()) ? ROYGBIV.getText("info2") : ROYGBIV.getText("infoText");
 
-var infos;
+  ROYGBIV.showText(infoText);
 
-if (ROYGBIV.isMobile()){
-  infos = [
-    "touch the surface to arrive",
-    "pinch to zoom in/out",
-    "move finger to rotate"
-  ];
-}else{
-  infos = [
-    "Click on the surface to arrive",
-    "W/S to zoom in/out",
-    "A/D to rotate"
-  ];
-}
+  var infos;
 
-ROYGBIV.onTextMouseOver(githubText, function(){
-  ROYGBIV.setTextColor(githubText, "#83a598");
-});
-
-ROYGBIV.onTextMouseOut(githubText, function(){
-  ROYGBIV.setTextColor(githubText, "#ebdbb2");
-});
-
-ROYGBIV.onTextClick(githubText, function(){
-  window.open("https://github.com/oguzeroglu/Kompute", "_blank");
-});
-
-ROYGBIV.setText(infoText, infos[0]);
-ROYGBIV.startAnimation(infoText, "anim1");
-var infoCounter = 0;
-ROYGBIV.executeDelayed(function(){
-  infoCounter ++;
-
-  if (infoCounter == infos.length){
-    infoCounter = 0;
+  if (ROYGBIV.isMobile()){
+    infos = [
+      "touch the surface to arrive",
+      "pinch to zoom in/out",
+      "move finger to rotate"
+    ];
+  }else{
+    infos = [
+      "Click on the surface to arrive",
+      "W/S to zoom in/out",
+      "A/D to rotate"
+    ];
   }
 
-  ROYGBIV.setText(infoText, infos[infoCounter]);
+  ROYGBIV.onTextMouseOver(githubText, function(){
+    ROYGBIV.setTextColor(githubText, "#83a598");
+  });
 
+  ROYGBIV.onTextMouseOut(githubText, function(){
+    ROYGBIV.setTextColor(githubText, "#ebdbb2");
+  });
+
+  ROYGBIV.onTextClick(githubText, function(){
+    window.open("https://github.com/oguzeroglu/Kompute", "_blank");
+  });
+
+  ROYGBIV.setText(infoText, infos[0]);
   ROYGBIV.startAnimation(infoText, "anim1");
-}, 3000, true);
+  var infoCounter = 0;
 
-// initialize beam structure
-var beamUnits = [];
-ROYGBIV.executeForEachObject(function(object, objectName){
-  if (!objectName.startsWith("beamUnit")){
-    return;
+  if (!ROYGBIV.isDefined(ROYGBIV.globals.delayedExecutionID)){
+    ROYGBIV.globals.delayedExecutionID = ROYGBIV.executeDelayed(function(){
+      if (ROYGBIV.getActiveSceneName() != "scene1"){
+        return;
+      }
+
+      infoCounter ++;
+
+      if (infoCounter == infos.length){
+        infoCounter = 0;
+      }
+
+      ROYGBIV.setText(infoText, infos[infoCounter]);
+
+      ROYGBIV.startAnimation(infoText, "anim1");
+    }, 3000, true);
   }
-  ROYGBIV.startAnimation(object, "anim1");
-  beamUnits.push({ object: object, interpolationCoef: 0 });
-});
 
-var count = 0;
-for (var i = 0; i < beamUnits.length; i ++){
-  beamUnits[i].interpolationCoef += count;
-  count += 1 / beamUnits.length;
-}
-
-var hideBeams = function(){
-  for (var i = 0; i < beamUnits.length; i ++){
-    ROYGBIV.hide(beamUnits[i].object);
-  }
-}
-
-var showBeams = function(){
-  for (var i = 0; i < beamUnits.length; i ++){
-    ROYGBIV.show(beamUnits[i].object);
-  }
-}
-
-var renderBeams = function(startPoint, endPoint){
-  var targetVector = ROYGBIV.getFromVectorPool(vectorPool);
-
-  for (var i = 0; i < beamUnits.length; i ++){
-    var beamUnit = beamUnits[i];
-    beamUnit.interpolationCoef += 0.001;
-    if (beamUnit.interpolationCoef > 1){
-      beamUnit.interpolationCoef = beamUnit.interpolationCoef - 1;
+  // initialize beam structure
+  var beamUnits = [];
+  ROYGBIV.executeForEachObject(function(object, objectName){
+    if (!objectName.startsWith("beamUnit")){
+      return;
     }
-    ROYGBIV.lerp(startPoint, endPoint, beamUnit.interpolationCoef, targetVector);
-    ROYGBIV.setPosition(beamUnit.object, targetVector.x, targetVector.y, targetVector.z);
+    ROYGBIV.startAnimation(object, "anim1");
+    beamUnits.push({ object: object, interpolationCoef: 0 });
+  });
+
+  var count = 0;
+  for (var i = 0; i < beamUnits.length; i ++){
+    beamUnits[i].interpolationCoef += count;
+    count += 1 / beamUnits.length;
   }
-}
 
-hideBeams();
+  var hideBeams = function(){
+    for (var i = 0; i < beamUnits.length; i ++){
+      ROYGBIV.hide(beamUnits[i].object);
+    }
+  }
 
-// set the active control
-ROYGBIV.setActiveControl(ROYGBIV.createOrbitControl({
-  maxRadius: (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()) ? 1100 : 600,
-  zoomDelta: 5
-}));
+  var showBeams = function(){
+    for (var i = 0; i < beamUnits.length; i ++){
+      ROYGBIV.show(beamUnits[i].object);
+    }
+  }
 
-ROYGBIV.setScreenOrientationChangeListener(function(){
+  var renderBeams = function(startPoint, endPoint){
+    var targetVector = ROYGBIV.getFromVectorPool(vectorPool);
+
+    for (var i = 0; i < beamUnits.length; i ++){
+      var beamUnit = beamUnits[i];
+      beamUnit.interpolationCoef += 0.001;
+      if (beamUnit.interpolationCoef > 1){
+        beamUnit.interpolationCoef = beamUnit.interpolationCoef - 1;
+      }
+      ROYGBIV.lerp(startPoint, endPoint, beamUnit.interpolationCoef, targetVector);
+      ROYGBIV.setPosition(beamUnit.object, targetVector.x, targetVector.y, targetVector.z);
+    }
+  }
+
+  hideBeams();
+
+  // set the active control
   ROYGBIV.setActiveControl(ROYGBIV.createOrbitControl({
     maxRadius: (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()) ? 1100 : 600,
     zoomDelta: 5
   }));
 
-  ROYGBIV.hideText(infoText);
-  infoText = (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()) ? ROYGBIV.getText("info2") : ROYGBIV.getText("infoText");
-  ROYGBIV.setText(infoText, infos[infoCounter]);
-  ROYGBIV.showText(infoText);
-});
+  // initialize the particle system
+  var particleSystem = ROYGBIV.getParticleSystem("circle");
 
-// initialize the particle system
-var particleSystem = ROYGBIV.getParticleSystem("circle");
+  var startConfigurations = {
+    particleSystem: particleSystem,
+    startPosition: ROYGBIV.vector(-5000, -5000, -5000)
+  };
 
-var startConfigurations = {
-  particleSystem: particleSystem,
-  startPosition: ROYGBIV.vector(-5000, -5000, -5000)
-};
+  ROYGBIV.startParticleSystem(startConfigurations);
 
-ROYGBIV.startParticleSystem(startConfigurations);
+  // initialize the text
+  var arriveHereText = ROYGBIV.getText("placeHolderText");
+  ROYGBIV.startAnimation(arriveHereText, "anim1");
+  ROYGBIV.hideText(arriveHereText);
 
-// initialize the text
-var arriveHereText = ROYGBIV.getText("placeHolderText");
-ROYGBIV.startAnimation(arriveHereText, "anim1");
-ROYGBIV.hideText(arriveHereText);
+  // initialize the player
+  var player = ROYGBIV.getObject("player");
+  ROYGBIV.startAnimation(player, "anim1");
+  ROYGBIV.startAnimation(player, "anim2");
+  ROYGBIV.setSteeringBehavior(player, "arriveBehavior1");
 
-// initialize the player
-var player = ROYGBIV.getObject("player");
-ROYGBIV.startAnimation(player, "anim1");
-ROYGBIV.startAnimation(player, "anim2");
-ROYGBIV.setSteeringBehavior(player, "arriveBehavior1");
+  // initialieze the placeholder
+  var placeHolder = ROYGBIV.getObject("placeHolder");
+  ROYGBIV.startAnimation(placeHolder, "anim2");
+  ROYGBIV.startAnimation(placeHolder, "anim3");
+  ROYGBIV.startAnimation(placeHolder, "anim4");
+  ROYGBIV.hide(placeHolder);
 
-// initialieze the placeholder
-var placeHolder = ROYGBIV.getObject("placeHolder");
-ROYGBIV.startAnimation(placeHolder, "anim2");
-ROYGBIV.startAnimation(placeHolder, "anim3");
-ROYGBIV.startAnimation(placeHolder, "anim4");
-ROYGBIV.hide(placeHolder);
+  // initialize the surface
+  var surface = ROYGBIV.getObject("surface1");
 
-// initialize the surface
-var surface = ROYGBIV.getObject("surface1");
+  ROYGBIV.setObjectClickListener(surface, function(x, y, z){
+    ROYGBIV.setParticleSystemPosition(particleSystem, x, 2, z);
 
-ROYGBIV.setObjectClickListener(surface, function(x, y, z){
-  ROYGBIV.setParticleSystemPosition(particleSystem, x, 2, z);
+    var vect = ROYGBIV.getFromVectorPool(vectorPool);
+    ROYGBIV.setVector(vect, x, 25, z);
+    ROYGBIV.setSteerableTargetPosition(player, vect);
 
-  var vect = ROYGBIV.getFromVectorPool(vectorPool);
-  ROYGBIV.setVector(vect, x, 25, z);
-  ROYGBIV.setSteerableTargetPosition(player, vect);
+    if (ROYGBIV.isMobile()){
+      ROYGBIV.showText(arriveHereText);
+      ROYGBIV.setTextPosition(arriveHereText, x, 100, z);
+    }
+  });
 
-  if (ROYGBIV.isMobile()){
+  ROYGBIV.setObjectMouseOverListener(surface, function(x, y, z){
+    ROYGBIV.show(placeHolder);
+    ROYGBIV.setPosition(placeHolder, x, 25, z);
+
     ROYGBIV.showText(arriveHereText);
     ROYGBIV.setTextPosition(arriveHereText, x, 100, z);
+
+    var startPoint = ROYGBIV.getFromVectorPool(vectorPool);
+    var endPoint = ROYGBIV.getFromVectorPool(vectorPool);
+
+    ROYGBIV.getPosition(player, startPoint);
+    ROYGBIV.setVector(endPoint, x, 25, z);
+
+    if (!ROYGBIV.isMobile()){
+      showBeams();
+      renderBeams(startPoint, endPoint);
+    }
+  });
+
+  ROYGBIV.setObjectMouseOutListener(surface, function(){
+    ROYGBIV.hide(placeHolder);
+
+    ROYGBIV.hideText(arriveHereText);
+
+    if (!ROYGBIV.isMobile()){
+      hideBeams();
+    }
+  });
+
+  ROYGBIV.setObjectMouseMoveListener(surface, function(x, y, z){
+    ROYGBIV.setPosition(placeHolder, x, 25, z);
+
+    ROYGBIV.setTextPosition(arriveHereText, x, 100, z);
+
+    var startPoint = ROYGBIV.getFromVectorPool(vectorPool);
+    var endPoint = ROYGBIV.getFromVectorPool(vectorPool);
+
+    ROYGBIV.getPosition(player, startPoint);
+    ROYGBIV.setVector(endPoint, x, 25, z);
+
+    renderBeams(startPoint, endPoint);
+  });
+
+}
+
+var onSceneRotateDeviceEntered = function(){
+
+  var infoText = ROYGBIV.getText("rotateDeviceInfoText");
+  var sprite = ROYGBIV.getSprite("rotateDeviceSprite");
+
+  var infos = [
+    "rotate device",
+    "make sure auto-rotate is enabled"
+  ];
+
+  var infoCounter = 0;
+
+  ROYGBIV.setText(infoText, infos[0]);
+  ROYGBIV.startAnimation(sprite, "anim1");
+  ROYGBIV.startAnimation(sprite, "anim2");
+
+  ROYGBIV.startAnimation(infoText, "anim1");
+
+  if (!ROYGBIV.isDefined(ROYGBIV.globals.delayedExecutionID2)){
+    ROYGBIV.globals.delayedExecutionID2 = ROYGBIV.executeDelayed(function(){
+      if (ROYGBIV.getActiveSceneName() != "rotateDevice"){
+        return;
+      }
+
+      infoCounter ++;
+
+      if (infoCounter == infos.length){
+        infoCounter = 0;
+      }
+
+      ROYGBIV.setText(infoText, infos[infoCounter]);
+
+      ROYGBIV.startAnimation(infoText, "anim1");
+    }, 3000, true);
+  }
+}
+
+// check for orientation
+ROYGBIV.setScreenOrientationChangeListener(function(isOrientationLandscape){
+  if (isOrientationLandscape){
+    ROYGBIV.changeScene("scene1", onScene1Entered);
+  }else{
+    ROYGBIV.changeScene("rotateDevice", onSceneRotateDeviceEntered);
   }
 });
 
-ROYGBIV.setObjectMouseOverListener(surface, function(x, y, z){
-  ROYGBIV.show(placeHolder);
-  ROYGBIV.setPosition(placeHolder, x, 25, z);
-
-  ROYGBIV.showText(arriveHereText);
-  ROYGBIV.setTextPosition(arriveHereText, x, 100, z);
-
-  var startPoint = ROYGBIV.getFromVectorPool(vectorPool);
-  var endPoint = ROYGBIV.getFromVectorPool(vectorPool);
-
-  ROYGBIV.getPosition(player, startPoint);
-  ROYGBIV.setVector(endPoint, x, 25, z);
-
-  showBeams();
-  renderBeams(startPoint, endPoint);
-});
-
-ROYGBIV.setObjectMouseOutListener(surface, function(){
-  ROYGBIV.hide(placeHolder);
-
-  ROYGBIV.hideText(arriveHereText);
-
-  hideBeams();
-});
-
-ROYGBIV.setObjectMouseMoveListener(surface, function(x, y, z){
-  ROYGBIV.setPosition(placeHolder, x, 25, z);
-
-  ROYGBIV.setTextPosition(arriveHereText, x, 100, z);
-
-  var startPoint = ROYGBIV.getFromVectorPool(vectorPool);
-  var endPoint = ROYGBIV.getFromVectorPool(vectorPool);
-
-  ROYGBIV.getPosition(player, startPoint);
-  ROYGBIV.setVector(endPoint, x, 25, z);
-
-  renderBeams(startPoint, endPoint);
-});
+if (ROYGBIV.isMobile() && !ROYGBIV.isOrientationLandscape()){
+  ROYGBIV.changeScene("rotateDevice", onSceneRotateDeviceEntered);
+}else{
+  onScene1Entered();
+}
 
 // stop the script
 ROYGBIV.stopScript("kompute-integration_arriveBehavior_init");
@@ -7848,7 +7903,6 @@ function getMaxWidthHeightGivenAspect(currentWidth, currentHeight, givenAspect){
 }
 
 function build(projectName, author){
-  terminal.clear();
   terminal.printInfo(Text.BUILDING_PROJECT);
   canvas.style.visibility = "hidden";
   terminal.disable();
@@ -7857,7 +7911,6 @@ function build(projectName, author){
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.onreadystatechange = function () {
     if (xhr.readyState == 4 && xhr.status == 200){
-      terminal.clear();
       var json = JSON.parse(xhr.responseText);
       if (json.error){
         terminal.printError(json.error);
@@ -8372,6 +8425,109 @@ function generateUUID() {
 // best formula of the universe.
 function affineTransformation(oldValue, oldMax, oldMin, newMax, newMin){
   return (((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin;
+}
+
+// iPhones are shitty devices for WebGL.
+function checkForTextureBleedingInIOS(){
+  for (var objName in addedObjects){
+    var obj = addedObjects[objName];
+
+    if (obj.customDisplacementTextureMatrixInfo){
+      return true;
+    }
+
+    if (obj.getTextureOffsetX() > 0){
+      return true;
+    }
+
+    if (obj.getTextureOffsetY() > 0){
+      return true;
+    }
+
+    if (obj.getTextureRepeatX() > 1){
+      return true;
+    }
+
+    if (obj.getTextureRepeatY() > 1){
+      return true;
+    }
+
+    for (var animName in obj.animations){
+      var action = obj.animations[animName].description.action;
+      if (action == animationHandler.actionTypes.OBJECT.TEXTURE_OFFSET_X){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.TEXTURE_OFFSET_Y){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.DISP_TEXTURE_OFFSET_X){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.DISP_TEXTURE_OFFSET_Y){
+        return true;
+      }
+    }
+  }
+
+  for (var objName in objectGroups){
+    var obj = objectGroups[objName];
+
+    for (var childName in obj.group){
+      var child = obj.group[childName];
+
+      if (child.customDisplacementTextureMatrixInfo){
+        return true;
+      }
+
+      if (child.getTextureOffsetX() > 0){
+        return true;
+      }
+
+      if (child.getTextureOffsetY() > 0){
+        return true;
+      }
+
+      if (child.getTextureRepeatX() > 1){
+        return true;
+      }
+
+      if (child.getTextureRepeatY() > 1){
+        return true;
+      }
+    }
+
+    if (obj.getTextureOffsetX() > 0){
+      return true;
+    }
+
+    if (obj.getTextureOffsetY() > 0){
+      return true;
+    }
+
+    for (var animName in obj.animations){
+      var action = obj.animations[animName].description.action;
+      if (action == animationHandler.actionTypes.OBJECT.TEXTURE_OFFSET_X){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.TEXTURE_OFFSET_Y){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.DISP_TEXTURE_OFFSET_X){
+        return true;
+      }
+
+      if (action == animationHandler.actionTypes.OBJECT.DISP_TEXTURE_OFFSET_Y){
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 //******************************************************************
@@ -10075,6 +10231,16 @@ StateLoader.prototype.onAfterFinalized = function(){
     }
     rayCaster.refresh();
   }else{
+
+    if (!checkForTextureBleedingInIOS()){
+      for (var objName in addedObjects){
+        macroHandler.injectMacro("PREVENT_IOS_TEXTURE_BLEEDING", addedObjects[objName].mesh.material, true, true);
+      }
+      for (var objName in objectGroups){
+        macroHandler.injectMacro("PREVENT_IOS_TEXTURE_BLEEDING", objectGroups[objName].mesh.material, true, true);
+      }
+    }
+
     appendtoDeploymentConsole("Initializing workers.");
     modeSwitcher.switchMode();
   }
@@ -12377,16 +12543,18 @@ ObjectGroup.prototype.merge = function(){
           this.push(textureMatrixInfos, addedObject.getTextureRepeatX(), ((4*a) + 2), isIndexed);
           this.push(textureMatrixInfos, addedObject.getTextureRepeatY(), ((4*a) + 3), isIndexed);
 
-          if (addedObject.customDisplacementTextureMatrixInfo){
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*a), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*a) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*a) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*a) + 3), isIndexed);
-          }else{
-            this.push(displacementTextureMatrixInfos, -100, (4*a), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*a) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*a) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*a) + 3), isIndexed);
+          if (this.hasDisplacement){
+            if (addedObject.customDisplacementTextureMatrixInfo){
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*a), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*a) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*a) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*a) + 3), isIndexed);
+            }else{
+              this.push(displacementTextureMatrixInfos, -100, (4*a), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*a) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*a) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*a) + 3), isIndexed);
+            }
           }
         }else{
           this.push(textureMatrixInfos, 0, (4*a), isIndexed);
@@ -12407,16 +12575,18 @@ ObjectGroup.prototype.merge = function(){
           this.push(textureMatrixInfos, addedObject.getTextureRepeatX(), ((4*b) + 2), isIndexed);
           this.push(textureMatrixInfos, addedObject.getTextureRepeatY(), ((4*b) + 3), isIndexed);
 
-          if (addedObject.customDisplacementTextureMatrixInfo){
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*b), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*b) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*b) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*b) + 3), isIndexed);
-          }else{
-            this.push(displacementTextureMatrixInfos, -100, (4*b), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*b) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*b) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*b) + 3), isIndexed);
+          if (this.hasDisplacement){
+            if (addedObject.customDisplacementTextureMatrixInfo){
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*b), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*b) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*b) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*b) + 3), isIndexed);
+            }else{
+              this.push(displacementTextureMatrixInfos, -100, (4*b), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*b) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*b) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*b) + 3), isIndexed);
+            }
           }
         }else{
           this.push(textureMatrixInfos, 0, (4*b), isIndexed);
@@ -12437,16 +12607,18 @@ ObjectGroup.prototype.merge = function(){
           this.push(textureMatrixInfos, addedObject.getTextureRepeatX(), ((4*c) + 2), isIndexed);
           this.push(textureMatrixInfos, addedObject.getTextureRepeatY(), ((4*c) + 3), isIndexed);
 
-          if (addedObject.customDisplacementTextureMatrixInfo){
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*c), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*c) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*c) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*c) + 3), isIndexed);
-          }else{
-            this.push(displacementTextureMatrixInfos, -100, (4*c), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*c) + 1), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*c) + 2), isIndexed);
-            this.push(displacementTextureMatrixInfos, -100, ((4*c) + 3), isIndexed);
+          if (this.hasDisplacement){
+            if (addedObject.customDisplacementTextureMatrixInfo){
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetX, (4*c), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.offsetY, ((4*c) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatU, ((4*c) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, addedObject.customDisplacementTextureMatrixInfo.repeatV, ((4*c) + 3), isIndexed);
+            }else{
+              this.push(displacementTextureMatrixInfos, -100, (4*c), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*c) + 1), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*c) + 2), isIndexed);
+              this.push(displacementTextureMatrixInfos, -100, ((4*c) + 3), isIndexed);
+            }
           }
         }else{
           this.push(textureMatrixInfos, 0, (4*c), isIndexed);
@@ -31923,6 +32095,8 @@ AnimationHandler.prototype.assignInitialValue = function(animation){
     animation.params.totalTranslationY = 0;
   }else if (animation.description.action == this.actionTypes.OBJECT.TRANSLATE_Z){
     animation.params.totalTranslationZ = 0;
+  }else if (animation.description.action == this.actionTypes.SPRITE.COLOR){
+    animation.params.sourceColor.copy(animation.attachedObject.getColor());
   }
   animation.hasInitialValue = true;
 }
@@ -34860,6 +35034,11 @@ Sprite.prototype.handleResize = function(){
 
 Sprite.prototype.setRefHeight = function(){
   this.refHeight = (renderer.getCurrentViewport().w / screenResolution);
+}
+
+Sprite.prototype.getColor = function(){
+  REUSABLE_COLOR.copy(this.mesh.material.uniforms.color.value);
+  return REUSABLE_COLOR;
 }
 
 Sprite.prototype.export = function(){
