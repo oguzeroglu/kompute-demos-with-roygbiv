@@ -7103,7 +7103,7 @@ var onScene1Entered = function(){
   });
 
   ROYGBIV.onTextClick(githubText, function(){
-    window.open("https://github.com/oguzeroglu/Kompute", "_blank");
+    window.location.assign("https://github.com/oguzeroglu/Kompute", "_blank");
   });
 
   ROYGBIV.setText(infoText, infos[0]);
