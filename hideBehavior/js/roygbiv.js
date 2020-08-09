@@ -7175,7 +7175,7 @@ function deploymentScripts(){
 
   // set active control
   ROYGBIV.setActiveControl(ROYGBIV.createOrbitControl({
-    maxRadius: 1100,
+    maxRadius: 1300,
     minRadius: 100,
     zoomDelta: 5
   }));
