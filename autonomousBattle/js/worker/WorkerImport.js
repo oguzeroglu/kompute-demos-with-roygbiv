@@ -678,6 +678,9 @@ RayCaster.prototype.updateObject = function(obj, forceUpdate){
 
 RayCaster.prototype.issueUpdate = function(obj){
   if (!(mode == 1 && (obj.isAddedObject || obj.isObjectGroup) && !obj.isIntersectable)){
+    if (obj.isHidden){
+      return;
+    }
     rayCaster.binHandler.updateObject(obj);
   }
 }
@@ -13140,7 +13143,7 @@ var ParticleSystem = function(copyPS, name, particles, x, y, z, vx, vy, vz, ax, 
 ParticleSystem.prototype.compressGeometry = function(){
   macroHandler.compressAttributes(this.mesh, [
     "position", "velocity", "acceleration", "flags1", "flags3", "flags4", "angularQuaternion",
-    "rgbThreshold", "uvCoordinates", "targetColor" 
+    "rgbThreshold", "uvCoordinates", "targetColor"
   ]);
 }
 
@@ -13202,6 +13205,9 @@ ParticleSystem.prototype.createCopy = function(newParticleSystemName){
   copyParticleSystem.creationConfigurations = JSON.parse(JSON.stringify(this.creationConfigurations));
   copyParticleSystem.creationConfigurations.name = newParticleSystemName;
   copyParticleSystem.registeredSceneName = this.registeredSceneName;
+
+  copyParticleSystem.mesh.scale.copy(this.mesh.scale);
+
   return copyParticleSystem;
 }
 

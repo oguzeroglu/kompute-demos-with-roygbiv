@@ -7207,7 +7207,8 @@ function deploymentScripts(){
 
 var states = {
   "MOVE_RANDOMLY": "MOVE_RANDOMLY",
-  "COMBAT": "COMBAT"
+  "COMBAT": "COMBAT",
+  "AGGRESSIVE": "AGGRESSIVE"
 };
 
 var NORM_VECT = ROYGBIV.vector(0, 0, 1);
@@ -7325,7 +7326,7 @@ Character.prototype.canSeeEnemy = function(){
     ROYGBIV.setSteeringBehavior(this.body, "blendedAttack");
   }
 
-  if (this.state == states.COMBAT){
+  if (this.state == states.COMBAT || this.state == states.AGGRESSIVE){
     var enemyPos = ROYGBIV.getFromVectorPool(pool);
     ROYGBIV.getPosition(this.enemyBody, enemyPos);
     ROYGBIV.setSteerableLookTarget(this.body, enemyPos);
@@ -7359,7 +7360,7 @@ Character.prototype.cantSeeEnemy = function(){
   if (this.state == states.COMBAT){
     var now = performance.now();
     if (now - this.lastSeeTime > 4000){
-
+      this.state = states.AGGRESSIVE;
     }
   }
 }
@@ -7423,6 +7424,12 @@ Character.prototype.update = function(x, y, z){
     ROYGBIV.setVector(randomVec, x, y, z);
     ROYGBIV.setSteerableTargetPosition(this.body, randomVec);
     this.lastCombatMoveTime = now;
+  }
+
+  if (this.state == states.AGGRESSIVE){
+    var vec = ROYGBIV.getFromVectorPool(pool);
+    ROYGBIV.getPosition(this.enemyBody, vec);
+    ROYGBIV.setSteerableTargetPosition(this.body, vec);
   }
 }
 
@@ -15421,7 +15428,7 @@ var ParticleSystem = function(copyPS, name, particles, x, y, z, vx, vy, vz, ax, 
 ParticleSystem.prototype.compressGeometry = function(){
   macroHandler.compressAttributes(this.mesh, [
     "position", "velocity", "acceleration", "flags1", "flags3", "flags4", "angularQuaternion",
-    "rgbThreshold", "uvCoordinates", "targetColor" 
+    "rgbThreshold", "uvCoordinates", "targetColor"
   ]);
 }
 
@@ -15483,6 +15490,9 @@ ParticleSystem.prototype.createCopy = function(newParticleSystemName){
   copyParticleSystem.creationConfigurations = JSON.parse(JSON.stringify(this.creationConfigurations));
   copyParticleSystem.creationConfigurations.name = newParticleSystemName;
   copyParticleSystem.registeredSceneName = this.registeredSceneName;
+
+  copyParticleSystem.mesh.scale.copy(this.mesh.scale);
+
   return copyParticleSystem;
 }
 
@@ -22653,6 +22663,9 @@ RayCaster.prototype.updateObject = function(obj, forceUpdate){
 
 RayCaster.prototype.issueUpdate = function(obj){
   if (!(mode == 1 && (obj.isAddedObject || obj.isObjectGroup) && !obj.isIntersectable)){
+    if (obj.isHidden){
+      return;
+    }
     rayCaster.binHandler.updateObject(obj);
   }
 }
@@ -37315,6 +37328,7 @@ LightHandler.prototype.calculateDynamicTypeWeight = function(typeKey){
 }
 
 LightHandler.prototype.onSwitchFromPreviewToDesign = function(){
+
   this.unbakeLights();
 
   for (var sceneName in sceneHandler.scenes){
@@ -37327,7 +37341,6 @@ LightHandler.prototype.onSwitchFromPreviewToDesign = function(){
 }
 
 LightHandler.prototype.onSwitchFromDesignToPreview = function(){
-  this.bakeLights();
 
   this.originalLightInfos = new Object();
 
@@ -37552,9 +37565,18 @@ LightHandler.prototype.onAfterSceneChange = function(){
       this.addLightToObject(autoInstancedObject);
     }
   }
+
+  if (mode == 1){
+    this.bakeLights();
+  }
 }
 
 LightHandler.prototype.onBeforeSceneChange = function(){
+
+  if (mode == 1){
+    this.unbakeLights();
+  }
+
   var addedObjectsInScene = sceneHandler.getAddedObjects();
   var objectGroupsInScene = sceneHandler.getObjectGroups();
   var autoInstancedObjectsInScene = sceneHandler.getAutoInstancedObjects();
